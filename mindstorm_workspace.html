@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Mindstorm Workspace</title>
+  <link rel="stylesheet" type="text/css" href="style.css">
+  <script src="https://unpkg.com/blockly/blockly.min.js"></script>
+  <script src="https://unpkg.com/blockly/blocks/mindstorms.js"></script>
+  <style>
+    .panel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      margin-bottom: 20px;
+      border: 1px solid #ccc;
+    }
+
+    .robot {
+      width: 50px;
+      height: 50px;
+      background-color: red;
+      position: absolute;
+      transition: transform 0.5s ease;
+    }
+
+    body {
+  background-color: #f2f2f2;
+  font-family: Arial, sans-serif;
+}
+
+h1 {
+  color: #333;
+}
+
+.panel:not(#board) {
+  background-color: #fff;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+  padding: 20px;
+}
+
+.panel h2 {
+  color: #555;
+  margin-bottom: 10px;
+}
+
+.panel p {
+  color: #888;
+}
+
+input[type="text"],
+button {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  font-size: 14px;
+}
+
+button {
+  background-color: #4caf50;
+  color: #fff;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #45a049;
+}
+
+ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+li {
+  margin-bottom: 5px;
+}
+
+#board {
+  width: 600px;
+  height: 600px;
+  background-color: lightgray;
+  position: relative;
+}
+    
+
+
+  </style>
+  <style>
+    #blocklyDiv {
+      width: 100%;
+      height: 500px; 
+    }
+  </style>
+</head>
+<body>
+  <h1>Mindstorm Workspace</h1>
+
+  <div class="panel">
+    <h2>Bloki programowe</h2>
+    <div id="blocklyDiv"></div>
+    <button onclick="runProgram(); updateInstructions();">Uruchom symulację</button>
+  </div>
+  <div class="panel">
+    <h2>Scenariusz zadania</h2>
+    <div id="board">
+      <div id="robot1" class="robot">1</div>
+      <div id="robot2" class="robot">2</div>
+      <div id="robot3" class="robot">3</div>
+      <div id="robot4" class="robot">4</div>
+    </div>
+  </div>
+  <div class="panel">
+    <h2>Lista uczniów / zespołów</h2>
+    <input type="text" id="firstNameInput" placeholder="Imię">
+    <input type="text" id="lastNameInput" placeholder="Nazwisko">
+    <button onclick="addToTeam()">Dodaj</button>
+    <ul id="teamList"></ul>
+  </div>
+  
+  <div class="panel">
+    <h2>Instrukcje:</h2>
+    <p>Tutaj znajdują się instrukcje stworzone przez:</p>
+    <ul id="nameList"></ul>
+  </div>
+  
+  <script>
+    var teamList = [];
+  
+    function addToTeam() {
+      var firstName = document.getElementById("firstNameInput").value;
+      var lastName = document.getElementById("lastNameInput").value;
+      var fullName = firstName + " " + lastName;
+  
+      teamList.push(fullName);
+  
+      var listElement = document.createElement("li");
+      listElement.textContent = fullName;
+  
+      var deleteButton = document.createElement("button");
+      deleteButton.textContent = "Usuń";
+      deleteButton.addEventListener("click", function() {
+        removeFromTeam(fullName);
+      });
+  
+      listElement.appendChild(deleteButton);
+  
+      var teamListElement = document.getElementById("teamList");
+      teamListElement.appendChild(listElement);
+    }
+  
+    function removeFromTeam(fullName) {
+      var index = teamList.indexOf(fullName);
+      if (index !== -1) {
+        teamList.splice(index, 1);
+        var teamListElement = document.getElementById("teamList");
+        teamListElement.removeChild(teamListElement.childNodes[index]);
+      }
+    }
+  
+    function updateInstructions() {
+      var nameListSection = document.getElementById("nameList");
+      nameListSection.innerHTML = "";
+  
+      for (var i = 0; i < teamList.length; i++) {
+        var listItem = document.createElement("li");
+        listItem.textContent = teamList[i];
+        nameListSection.appendChild(listItem);
+      }
+    }
+  </script>
+  
+
+
+
+
+  <script>
+      var programRunning = false;
+    var workspace;
+    var programQueue = [];
+
+    document.addEventListener("DOMContentLoaded", function() {
+      workspace = Blockly.inject('blocklyDiv', { toolbox: document.getElementById('toolbox') });
+    });
+
+    function runProgram() {
+      if (programRunning) {
+        return;
+      }
+      programRunning = true;
+
+      var code = Blockly.JavaScript.workspaceToCode(workspace);
+      programQueue = code.split('\n');
+      executeNextBlock();
+    }
+
+    function executeNextBlock() {
+      if (programQueue.length === 0) {
+        programRunning = false;
+        return;
+      }
+
+      var nextBlock = programQueue.shift();
+      eval(nextBlock);
+      setTimeout(executeNextBlock, 1000); // Opóźnienie 1 sekundy między kolejnymi blokami
+    }
+    
+
+    function startProgram(robot) {
+  var robotElement = document.getElementById('robot' + robot);
+  var newPosition;
+
+  switch (robot) {
+    case '1':
+      newPosition = { x: 0, y: 0 };
+      break;
+    case '2':
+      newPosition = { x: 550, y: 0 };
+      break;
+    case '3':
+      newPosition = { x: 0, y: 550 };
+      break;
+    case '4':
+      newPosition = { x: 550, y: 550 };
+      break;
+    default:
+      newPosition = { x: 0, y: 0 };
+  }
+
+  moveRobot(robotElement, newPosition);
+}
+    Blockly.Blocks['mindstorms_custom_move_right'] = {
+      init: function() {
+        this.appendDummyInput()
+            .appendField('Przesuń')
+            .appendField(new Blockly.FieldDropdown([
+              ["Robot 1", "1"],
+              ["Robot 2", "2"],
+              ["Robot 3", "3"],
+              ["Robot 4", "4"]
+            ]), "robot")
+            .appendField('w prawo o')
+            .appendField(new Blockly.FieldNumber(0), "distance")
+            .appendField('jednostek');
+        this.setPreviousStatement(true, null);
+        this.setNextStatement(true, null);
+        this.setColour(230);
+        this.setTooltip('');
+        this.setHelpUrl('');
+      }
+    };
+    Blockly.Blocks['mindstorms_custom_move_left'] = {
+      init: function() {
+        this.appendDummyInput()
+            .appendField('Przesuń')
+            .appendField(new Blockly.FieldDropdown([
+              ["Robot 1", "1"],
+              ["Robot 2", "2"],
+              ["Robot 3", "3"],
+              ["Robot 4", "4"]
+            ]), "robot")
+            .appendField('w lewo o')
+            .appendField(new Blockly.FieldNumber(0), "distance")
+            .appendField('jednostek');
+        this.setPreviousStatement(true, null);
+        this.setNextStatement(true, null);
+        this.setColour(230);
+        this.setTooltip('');
+        this.setHelpUrl('');
+      }
+    };
+    Blockly.Blocks['change_robot_color'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("Zmień kolor robota")
+        .appendField(new Blockly.FieldDropdown([["Robot 1", "1"], ["Robot 2", "2"], ["Robot 3", "3"], ["Robot 4", "4"]]), "robot")
+        .appendField("na kolor")
+        .appendField(new Blockly.FieldDropdown([["Czerwony", "red"], ["Niebieski", "blue"], ["Zielony", "green"], ["Żółty", "yellow"]]), "color");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(230);
+    this.setTooltip("");
+    this.setHelpUrl("");
+  }
+};
+Blockly.Blocks['mindstorms_custom_move_down'] = {
+      init: function() {
+        this.appendDummyInput()
+            .appendField('Przesuń')
+            .appendField(new Blockly.FieldDropdown([
+              ["Robot 1", "1"],
+              ["Robot 2", "2"],
+              ["Robot 3", "3"],
+              ["Robot 4", "4"]
+            ]), "robot")
+            .appendField('w dół o')
+            .appendField(new Blockly.FieldNumber(0), "distance")
+            .appendField('jednostek');
+        this.setPreviousStatement(true, null);
+        this.setNextStatement(true, null);
+        this.setColour(230);
+        this.setTooltip('');
+        this.setHelpUrl('');
+      }
+    };
+    Blockly.Blocks['mindstorms_custom_move_up'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField('Przesuń')
+        .appendField(new Blockly.FieldDropdown([
+          ["Robot 1", "1"],
+          ["Robot 2", "2"],
+          ["Robot 3", "3"],
+          ["Robot 4", "4"]
+        ]), "robot")
+        .appendField('w górę o')
+        .appendField(new Blockly.FieldNumber(0), "distance")
+        .appendField('jednostek');
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(230);
+    this.setTooltip('');
+    this.setHelpUrl('');
+  }
+};
+Blockly.Blocks['mindstorms_custom_move_up_left'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField('Przesuń')
+        .appendField(new Blockly.FieldDropdown([
+          ["Robot 1", "1"],
+          ["Robot 2", "2"],
+          ["Robot 3", "3"],
+          ["Robot 4", "4"]
+        ]), "robot")
+        .appendField('w górę i w lewo o')
+        .appendField(new Blockly.FieldNumber(0), "distance")
+        .appendField('jednostek');
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(230);
+    this.setTooltip('');
+    this.setHelpUrl('');
+  }
+};
+Blockly.Blocks['mindstorms_custom_move_up_right'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField('Przesuń')
+        .appendField(new Blockly.FieldDropdown([
+          ["Robot 1", "1"],
+          ["Robot 2", "2"],
+          ["Robot 3", "3"],
+          ["Robot 4", "4"]
+        ]), "robot")
+        .appendField('w górę i w prawo o')
+        .appendField(new Blockly.FieldNumber(0), "distance")
+        .appendField('jednostek');
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(230);
+    this.setTooltip('');
+    this.setHelpUrl('');
+  }
+};
+Blockly.Blocks['mindstorms_custom_move_down_left'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField('Przesuń')
+        .appendField(new Blockly.FieldDropdown([
+          ["Robot 1", "1"],
+          ["Robot 2", "2"],
+          ["Robot 3", "3"],
+          ["Robot 4", "4"]
+        ]), "robot")
+        .appendField('w dół i w lewo o')
+        .appendField(new Blockly.FieldNumber(0), "distance")
+        .appendField('jednostek');
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(230);
+    this.setTooltip('');
+    this.setHelpUrl('');
+  }
+};
+Blockly.Blocks['mindstorms_custom_move_down_right'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField('Przesuń')
+        .appendField(new Blockly.FieldDropdown([
+          ["Robot 1", "1"],
+          ["Robot 2", "2"],
+          ["Robot 3", "3"],
+          ["Robot 4", "4"]
+        ]), "robot")
+        .appendField('w dół i w prawo o')
+        .appendField(new Blockly.FieldNumber(0), "distance")
+        .appendField('jednostek');
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(230);
+    this.setTooltip('');
+    this.setHelpUrl('');
+  }
+};
+
+Blockly.Blocks['rotate_robot_right'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("Obróć robota")
+        .appendField(new Blockly.FieldDropdown([["Robot 1", "1"], ["Robot 2", "2"], ["Robot 3", "3"], ["Robot 4", "4"]]), "robot")
+        .appendField("o")
+        .appendField(new Blockly.FieldAngle(90), "angle")
+        .appendField("stopni");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(230);
+    this.setTooltip("");
+    this.setHelpUrl("");
+  }
+};
+Blockly.Blocks['rotate_robot_left'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("Obróć w lewo robota")
+        .appendField(new Blockly.FieldDropdown([["Robot 1", "1"], ["Robot 2", "2"], ["Robot 3", "3"], ["Robot 4", "4"]]), "robot")
+        .appendField("o")
+        .appendField(new Blockly.FieldAngle(90), "angle")
+        .appendField("stopni");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(230);
+    this.setTooltip("");
+    this.setHelpUrl("");
+  }
+};
+
+Blockly.JavaScript['change_robot_color'] = function(block) {
+  var robot = block.getFieldValue('robot');
+  var color = block.getFieldValue('color');
+  return 'changeRobotColor("' + robot + '", "' + color + '");\n';
+};
+
+function changeRobotColor(robot, color) {
+  var robotElement = document.getElementById('robot' + robot);
+  robotElement.style.backgroundColor = color;
+}
+    Blockly.JavaScript['mindstorms_custom_move_right'] = function(block) {
+      var robot = block.getFieldValue('robot');
+      var distance = block.getFieldValue('distance');
+      var code = 'moveRobotRight(' + robot + ', ' + distance + ');\n';
+      return code;
+    };
+    Blockly.JavaScript['mindstorms_custom_move_left'] = function(block) {
+      var robot = block.getFieldValue('robot');
+      var distance = block.getFieldValue('distance');
+      var code = 'moveRobotLeft(' + robot + ', ' + distance + ');\n';
+      return code;
+    };
+
+
+
+Blockly.JavaScript['mindstorms_custom_move_up_left'] = function(block) {
+  var robot = block.getFieldValue('robot');
+  var distance = block.getFieldValue('distance');
+  var code = 'moveRobotUpLeft(' + robot + ', ' + distance + ');\n';
+  return code;
+};
+
+
+
+Blockly.JavaScript['mindstorms_custom_move_up_right'] = function(block) {
+  var robot = block.getFieldValue('robot');
+  var distance = block.getFieldValue('distance');
+  var code = 'moveRobotUpRight(' + robot + ', ' + distance + ');\n';
+  return code;
+};
+
+
+
+Blockly.JavaScript['mindstorms_custom_move_down_left'] = function(block) {
+  var robot = block.getFieldValue('robot');
+  var distance = block.getFieldValue('distance');
+  var code = 'moveRobotDownLeft(' + robot + ', ' + distance + ');\n';
+  return code;
+};
+
+
+
+Blockly.JavaScript['mindstorms_custom_move_down_right'] = function(block) {
+  var robot = block.getFieldValue('robot');
+  var distance = block.getFieldValue('distance');
+  var code = 'moveRobotDownRight(' + robot + ', ' + distance + ');\n';
+  return code;
+};
+
+
+Blockly.JavaScript['rotate_robot_right'] = function(block) {
+  var robot = block.getFieldValue('robot');
+  var angle = block.getFieldValue('angle');
+  return 'rotateRobot("' + robot + '", ' + angle + ');\n';
+};
+function rotateRobot(robot, angle) {
+  var robotElement = document.getElementById('robot' + robot);
+  robotOrientation += angle;
+  robotElement.style.transform = 'rotate(' + robotOrientation + 'deg)';
+}
+
+
+Blockly.JavaScript['rotate_robot_left'] = function(block) {
+  var robot = block.getFieldValue('robot');
+  var angle = block.getFieldValue('angle');
+  return 'rotateRobotleft("' + robot + '", ' + angle + ');\n';
+};
+function rotateRobotleft(robot, angle) {
+  var robotElement = document.getElementById('robot' + robot);
+  robotOrientation -= angle;
+  robotElement.style.transform = 'rotate(' + robotOrientation + 'deg)';
+}
+
+    Blockly.JavaScript['mindstorms_custom_move_down'] = function(block) {
+      var robot = block.getFieldValue('robot');
+      var distance = block.getFieldValue('distance');
+      var code = 'moveRobotDown(' + robot + ', ' + distance + ');\n';
+      return code;
+    };
+
+    Blockly.JavaScript['mindstorms_custom_move_up'] = function(block) {
+  var robot = block.getFieldValue('robot');
+  var distance = block.getFieldValue('distance');
+  var code = 'moveRobotUp(' + robot + ', ' + distance + ');\n';
+  return code;
+};
+
+    function startProgram(robot) {
+      console.log('Start programu dla robota: ' + robot);
+    }
+
+    var robotOrientation = 0; // początkowa orientacja robota (0 stopni - w prawo)
+
+function moveRobotUp(robot, distance) {
+  var robotElement = document.getElementById('robot' + robot);
+  var currentPosition = getRobotPosition(robotElement);
+  var newPosition = { x: currentPosition.x, y: currentPosition.y - distance };
+
+  // Sprawdzenie czy nowa pozycja w osi Y nie wychodzi poza planszę
+  if (newPosition.y < 0) {
+    newPosition.y = 0;
+  }
+
+  animateRobot(robotElement, newPosition);
+}
+
+function moveRobotDown(robot, distance) {
+  var robotElement = document.getElementById('robot' + robot);
+  var currentPosition = getRobotPosition(robotElement);
+  var newPosition = { x: currentPosition.x, y: currentPosition.y + distance };
+
+  // Sprawdzenie czy nowa pozycja w osi Y nie wychodzi poza planszę
+  if (newPosition.y > 550) {
+    newPosition.y = 550;
+  }
+
+  animateRobot(robotElement, newPosition);
+}
+
+function moveRobotLeft(robot, distance) {
+  var robotElement = document.getElementById('robot' + robot);
+  var currentPosition = getRobotPosition(robotElement);
+  var newPosition = { x: currentPosition.x - distance, y: currentPosition.y };
+
+  // Sprawdzenie czy nowa pozycja w osi X nie wychodzi poza planszę
+  if (newPosition.x < 0) {
+    newPosition.x = 0;
+  }
+
+  animateRobot(robotElement, newPosition);
+}
+
+function moveRobotRight(robot, distance) {
+  var robotElement = document.getElementById('robot' + robot);
+  var currentPosition = getRobotPosition(robotElement);
+  var newPosition = { x: currentPosition.x + distance, y: currentPosition.y };
+
+  // Sprawdzenie czy nowa pozycja w osi X nie wychodzi poza planszę
+  if (newPosition.x > 550) {
+    newPosition.x = 550;
+  }
+
+  animateRobot(robotElement, newPosition);
+}
+function moveRobotDownLeft(robot, distance) {
+  var robotElement = document.getElementById('robot' + robot);
+  var currentPosition = getRobotPosition(robotElement);
+  var newPosition = { x: currentPosition.x - distance, y: currentPosition.y + distance };
+
+  // Sprawdzenie czy nowa pozycja w osi X nie wychodzi poza planszę
+  if (newPosition.x < 0) {
+    newPosition.x = 0;
+  }
+
+  // Sprawdzenie czy nowa pozycja w osi Y nie wychodzi poza planszę
+  if (newPosition.y > 550) {
+    newPosition.y = 550;
+  }
+
+  animateRobot(robotElement, newPosition);
+}
+
+function moveRobotDownRight(robot, distance) {
+  var robotElement = document.getElementById('robot' + robot);
+  var currentPosition = getRobotPosition(robotElement);
+  var newPosition = { x: currentPosition.x + distance, y: currentPosition.y + distance };
+
+  // Sprawdzenie czy nowa pozycja w osi X nie wychodzi poza planszę
+  if (newPosition.x > 550) {
+    newPosition.x = 550;
+  }
+
+  // Sprawdzenie czy nowa pozycja w osi Y nie wychodzi poza planszę
+  if (newPosition.y > 550) {
+    newPosition.y = 550;
+  }
+
+  animateRobot(robotElement, newPosition);
+}
+
+function moveRobotUpLeft(robot, distance) {
+  var robotElement = document.getElementById('robot' + robot);
+  var currentPosition = getRobotPosition(robotElement);
+  var newPosition = { x: currentPosition.x - distance, y: currentPosition.y - distance };
+
+  // Sprawdzenie czy nowa pozycja w osi X nie wychodzi poza planszę
+  if (newPosition.x < 0) {
+    newPosition.x = 0;
+  }
+
+  // Sprawdzenie czy nowa pozycja w osi Y nie wychodzi poza planszę
+  if (newPosition.y < 0) {
+    newPosition.y = 0;
+  }
+
+  animateRobot(robotElement, newPosition);
+}
+
+function moveRobotUpRight(robot, distance) {
+  var robotElement = document.getElementById('robot' + robot);
+  var currentPosition = getRobotPosition(robotElement);
+  var newPosition = { x: currentPosition.x + distance, y: currentPosition.y - distance };
+
+  // Sprawdzenie czy nowa pozycja w osi X nie wychodzi poza planszę
+  if (newPosition.x > 550) {
+    newPosition.x = 550;
+  }
+
+  // Sprawdzenie czy nowa pozycja w osi Y nie wychodzi poza planszę
+  if (newPosition.y < 0) {
+    newPosition.y = 0;
+  }
+
+  animateRobot(robotElement, newPosition);
+}
+
+
+
+function getRobotPosition(robotElement) {
+  var style = window.getComputedStyle(robotElement);
+  var x = parseFloat(style.getPropertyValue('left'));
+  var y = parseFloat(style.getPropertyValue('top'));
+  return { x: x, y: y };
+}
+
+function animateRobot(robotElement, newPosition) {
+  var currentPosition = getRobotPosition(robotElement);
+  var stepX = (newPosition.x - currentPosition.x) / 100; 
+  var stepY = (newPosition.y - currentPosition.y) / 100; 
+
+  function animationStep(step) {
+    var x = currentPosition.x + step * stepX;
+    var y = currentPosition.y + step * stepY;
+    robotElement.style.left = x + 'px';
+    robotElement.style.top = y + 'px';
+
+    if (step < 100) {
+      window.requestAnimationFrame(function () {
+        animationStep(step + 1);
+      });
+    }
+  }
+
+  animationStep(1);
+}
+
+  </script>
+
+  <xml id="toolbox" style="display: none">
+    <category name="Ruchy">
+      <block type="mindstorms_custom_move_right"></block>
+      <block type="mindstorms_custom_move_down"></block>
+      <block type="mindstorms_custom_move_up"></block>
+      <block type="mindstorms_custom_move_left"></block>
+    </category>
+    <category name="Ruchu na skos">
+      <block type="mindstorms_custom_move_down_left"></block>
+      <block type="mindstorms_custom_move_down_right"></block>
+      <block type="mindstorms_custom_move_up_left"></block>
+      <block type="mindstorms_custom_move_up_right"></block>
+    </category>
+      <category name="Zmiana koloru">
+        <block type="change_robot_color"></block>
+    </category>
+    <category name="Obrot">
+      <block type="rotate_robot_right"></block>
+      <block type="rotate_robot_left"></block>
+  </category>
+  </xml>
+</body>
+</html>
